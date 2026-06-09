@@ -52,7 +52,7 @@
             </div>
             <div class="flex items-center gap-2 text-xs bg-indigo-950/50 px-3 py-1.5 rounded-full border border-indigo-800/60">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-slate-300">종교적 중립 모드 활성화</span>
+                <span class="text-slate-300">정치적·종교적 중립 모드 활성화</span>
             </div>
         </div>
     </header>
@@ -244,7 +244,7 @@
                         <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
                         <div>
                             <p class="font-bold text-slate-800 text-sm">격조 높은 연설문을 구성 중...</p>
-                            <p class="text-xs text-slate-400 mt-1">교육적 가치와 종교적 중립 검토를 거쳐 문장을 연마하고 있습니다.</p>
+                            <p class="text-xs text-slate-400 mt-1">교육적 가치와 정치적, 종교적 중립 검토를 거쳐 문장을 연마하고 있습니다.</p>
                         </div>
                     </div>
                 </div>
@@ -319,7 +319,7 @@
     <footer class="bg-slate-950 text-slate-500 border-t border-slate-900 py-6 text-center text-xs mt-auto">
         <div class="max-w-7xl mx-auto px-4">
             <p class="font-semibold text-slate-400">교육기관 관리자 AI 인사말 메이커</p>
-            <p class="mt-1">인사말과 훈화문 작성 시 종교에 대한 중립성을 완벽하게 존중하며 편향 없는 품격 있는 보편 인성 지도를 지원합니다.</p>
+            <p class="mt-1">인사말과 훈화문 작성 시 정치적·종교적 중립성을 완벽하게 존중하며 편향 없는 품격 있는 보편 인성 지도를 지원합니다.</p>
             <p class="mt-2 text-[10px] text-slate-600">Copyright &copy; 2026. All rights reserved.</p>
         </div>
     </footer>
@@ -656,7 +656,7 @@
             const loader = document.getElementById('aiLoader');
             if (loader) loader.classList.remove('hidden');
 
-            const systemInstruction = "당신은 예의 바르고, 지혜와 자애로움을 지닌 교육기관의 책임감 있는 최고의 리더(기관장, 교장, 원장 등)입니다. 전달받은 행사 환경과 교육 비전에 발맞춰 감동과 배움의 깊이가 있는 완벽한 격식의 연설 원고를 창조합니다. 문체는 정중하고 지적인 '하십시오체'를 사용하고, 흐름이 지루하지 않게 조율해야 합니다. 공적 교육 가치를 보호하기 위해, 종교적 색채(기독교, 불교, 하나님, 은총, 기도, 성경 등 특정 종파 및 교리 관련 단어)는 완벽히 거세하고, 보편적이고 따뜻한 인성 및 철학적 표현으로 승화하여 작성해야 합니다.";
+            const systemInstruction = "당신은 예의 바르고, 지혜와 자애로움을 지닌 교육기관의 책임감 있는 최고의 리더(기관장, 교장, 원장 등)입니다. 전달받은 행사 환경과 교육 비전에 발맞춰 감동과 배움의 깊이가 있는 완벽한 격식의 연설 원고를 창조합니다. 문체는 정중하고 지적인 '하십시오체'를 사용하고, 흐름이 지루하지 않게 조율해야 합니다. 공적 교육 가치를 보호하기 위해, 특정 정당이나 정파, 이념을 지지하거나 비판하는 '정치적 편향성' 및 종교적 색채(기독교, 불교, 하나님, 은총, 기도, 성경 등 특정 종파 및 교리 관련 단어)는 완벽히 거세하고, 보편적이고 따뜻한 인성 및 철학적 표현으로 승화하여 작성해야 합니다.";
 
             const userQuery = `
 기관 정보: ${schoolName} (${schoolType})
@@ -679,18 +679,21 @@ ${combinedAtmospherePrompt}
    - [본문]: 기관 교육관 및 비전(${schoolVision})을 자연스레 연계하고, 청중들(${audience})의 노고와 가능성을 축하하기. 키워드(${keywords})를 글의 매끄러운 전개 속에 수려하게 조각해 넣고, 요청된 개별 사안(${additionalContent})이 있다면 그것이 부각되도록 문맥에 따스하게 직조해 넣어 주십시오.
    - [마무리]: 내일을 개척할 힘찬 응원과 축원, 연설 일자 및 '기관장 ${principalName} 드림' 형태의 정중한 맺음.
 2. 장황하게 같은 말을 늘리지 말고 격조 높은 시적 비유와 은유를 가미해 여운을 길게 주십시오.
-3. 기독교나 불교 등 어떠한 종교적 은유도 필터링하여 순수한 교육적 보편성만 살려야 합니다.
+3. 어떠한 정치적 당파성, 이념적 편향, 혹은 종교적 은유도 완벽히 필터링하여 순수한 공교육의 보편적 가치만 살려야 합니다.
 4. 설명이나 해설 문장은 모두 지우고, 단상 위에서 즉각 낭독할 '축사 본문 전문'만을 완벽하게 전송하십시오.
 `;
 
-            const apiKey = ""; // API Key Placeholder
-            const apiUrl = `https://script.google.com/macros/s/AKfycbzUq9tjUYV__bRrUaV_eT_OVAeXXPfK3-K5ovn5_sc3W5Ku8lq9zYXAbAtYArkoeaht/exec';
+            // Google Apps Script Web App Endpoint acting as Gemini API Proxy
+            const apiUrl = "https://script.google.com/macros/s/AKfycbzUq9tjUYV__bRrUaV_eT_OVAeXXPfK3-K5ovn5_sc3W5Ku8lq9zYXAbAtYArkoeaht/exec";
 
             const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
                 systemInstruction: {
                     parts: [{ text: systemInstruction }]
-                }
+                },
+                // Fallback properties for direct prompt-based GAS setups
+                prompt: userQuery,
+                systemInstructionText: systemInstruction
             };
 
             let retries = 3;
@@ -701,7 +704,9 @@ ${combinedAtmospherePrompt}
                 try {
                     const response = await fetch(apiUrl, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        // Note: Setting content-type to application/json triggers CORS preflight (OPTIONS request).
+                        // Google Apps Script web apps do not handle OPTIONS preflight out of the box.
+                        // Avoiding headers to send a 'Simple Request', letting GAS parse body text securely.
                         body: JSON.stringify(payload)
                     });
 
@@ -710,21 +715,32 @@ ${combinedAtmospherePrompt}
                     }
 
                     const result = await response.json();
-                    const candidate = result.candidates?.[0];
-                    if (candidate && candidate.content?.parts?.[0]?.text) {
-                        const generatedSpeech = candidate.content.parts[0].text;
-                        
+                    
+                    let generatedSpeech = "";
+                    if (typeof result === "string") {
+                        generatedSpeech = result;
+                    } else if (result && result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        generatedSpeech = result.candidates[0].content.parts[0].text;
+                    } else if (result && result.text) {
+                        generatedSpeech = result.text;
+                    } else if (result && result.response) {
+                        generatedSpeech = result.response;
+                    } else if (result && result.output) {
+                        generatedSpeech = result.output;
+                    }
+
+                    if (generatedSpeech && generatedSpeech.trim()) {
                         const speechTextarea = document.getElementById('speechTextarea');
                         const editorTitle = document.getElementById('editorTitle');
                         
-                        if (speechTextarea) speechTextarea.value = generatedSpeech;
+                        if (speechTextarea) speechTextarea.value = generatedSpeech.trim();
                         if (editorTitle) editorTitle.innerText = `${schoolName} ${eventName} 인사말 (AI 추천안)`;
                         
                         updateCharCount();
                         success = true;
                         
                         // 히스토리에 자동 추가 및 보관
-                        saveToHistoryList(schoolName, eventName, generatedSpeech);
+                        saveToHistoryList(schoolName, eventName, generatedSpeech.trim());
                         showToast("선택된 분위기가 조화롭게 녹아든 맞춤 인사말이 완성되었습니다!", "success");
                         break;
                     } else {
