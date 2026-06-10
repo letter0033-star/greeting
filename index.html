@@ -683,17 +683,15 @@ ${combinedAtmospherePrompt}
 4. 설명이나 해설 문장은 모두 지우고, 단상 위에서 즉각 낭독할 '축사 본문 전문'만을 완벽하게 전송하십시오.
 `;
 
-            // Google Apps Script Web App Endpoint acting as Gemini API Proxy
-            const apiUrl = "https://script.google.com/macros/s/AKfycbxqTOVJyrZ1aQw-eZHeAanUAbpt2gChqAx1lJPIkLhBfeObIR8xfM0nsjfB0juny1w_/exec";
+            // 제공된 API Key를 활용한 구글 Gemini API 직접 연동 설계
+            const apiKey = "AIzaSyCQj8lBsbLIUPFiz8hb4yt3b8E5ReBuVis";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
             const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
                 systemInstruction: {
                     parts: [{ text: systemInstruction }]
-                },
-                // Fallback properties for direct prompt-based GAS setups
-                prompt: userQuery,
-                systemInstructionText: systemInstruction
+                }
             };
 
             let retries = 3;
@@ -704,9 +702,9 @@ ${combinedAtmospherePrompt}
                 try {
                     const response = await fetch(apiUrl, {
                         method: 'POST',
-                        // Note: Setting content-type to application/json triggers CORS preflight (OPTIONS request).
-                        // Google Apps Script web apps do not handle OPTIONS preflight out of the box.
-                        // Avoiding headers to send a 'Simple Request', letting GAS parse body text securely.
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
                         body: JSON.stringify(payload)
                     });
 
@@ -717,16 +715,8 @@ ${combinedAtmospherePrompt}
                     const result = await response.json();
                     
                     let generatedSpeech = "";
-                    if (typeof result === "string") {
-                        generatedSpeech = result;
-                    } else if (result && result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    if (result && result.candidates?.[0]?.content?.parts?.[0]?.text) {
                         generatedSpeech = result.candidates[0].content.parts[0].text;
-                    } else if (result && result.text) {
-                        generatedSpeech = result.text;
-                    } else if (result && result.response) {
-                        generatedSpeech = result.response;
-                    } else if (result && result.output) {
-                        generatedSpeech = result.output;
                     }
 
                     if (generatedSpeech && generatedSpeech.trim()) {
@@ -748,12 +738,13 @@ ${combinedAtmospherePrompt}
                     }
 
                 } catch (err) {
+                    console.warn(`API 호출 실패 (재시도 남음: ${retries - 1}):`, err);
                     retries--;
                     if (retries === 0) {
                         break;
                     }
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2;
+                    delay *= 2; // 지수 백오프 적용
                 }
             }
 
