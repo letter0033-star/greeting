@@ -330,6 +330,7 @@
         <div id="toastMessage" class="text-xs font-semibold text-slate-200">알림 내용이 들어갈 자리</div>
     </div>
 
+    <!-- JS 스크립트 실행부 -->
     <script>
         // 새로운 10가지 특화 분위기 데이터 프리셋 구성
         const speechTemplates = [
@@ -602,6 +603,9 @@
 
         // AI 프롬프트 생성 및 API 연동
         async function generateSpeechWithAI() {
+            const today = new Date();
+            const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+
             const sNameEl = document.getElementById('schoolName');
             const pNameEl = document.getElementById('principalName');
             const sTypeEl = document.getElementById('schoolType');
@@ -636,13 +640,13 @@
                     const found = speechTemplates.find(t => t.id === id);
                     if (found) {
                         selectedNames.push(found.name);
-                        selectedGuidelines.push(`- [${found.name}]: ${found.prompt}`);
+                        selectedGuidelines.push(`- ${found.name}: ${found.prompt}`);
                     }
                 });
-                combinedAtmospherePrompt = `다음 분위기 요소들을 조화롭고 부드럽게 복합 가미하여 구성해 주십시오 (선택된 분위기: ${selectedNames.join(', ')}):\n${selectedGuidelines.join('\n')}`;
+                combinedAtmospherePrompt = `선택된 행사 분위기 (${selectedNames.join(', ')}) 지침:\n${selectedGuidelines.join('\n')}`;
             }
 
-            // 분량 정의
+            // 기대하는 원고 자수
             let lengthDesc = "공백 포함 약 800자 내외";
             if (lengthPreset === 'short') lengthDesc = "공백 포함 약 400자 내외로 군더더기 없이 간결하고 핵심 위주로 정리";
             if (lengthPreset === 'long') lengthDesc = "공백 포함 약 1200자 내외로 기품 있고 장엄하게 살을 붙인 형태";
@@ -664,7 +668,6 @@
 기관 교육 목표 및 핵심 비전: ${schoolVision}
 진행할 행사 성격: ${eventName}
 최종 핵심 청중: ${audience}
-선택된 행사 분위기 조합 지침:
 ${combinedAtmospherePrompt}
 
 강조하고 싶은 어조 및 전개형태: ${tone}
@@ -677,15 +680,15 @@ ${combinedAtmospherePrompt}
 1. 다음과 같은 엄정한 구도를 지켜 작성하십시오.
    - [도입]: 기품 있는 인사말, 내빈 방문 감사, 행사가 지닌 의의 전달.
    - [본문]: 기관 교육관 및 비전(${schoolVision})을 자연스레 연계하고, 청중들(${audience})의 노고와 가능성을 축하하기. 키워드(${keywords})를 글의 매끄러운 전개 속에 수려하게 조각해 넣고, 요청된 개별 사안(${additionalContent})이 있다면 그것이 부각되도록 문맥에 따스하게 직조해 넣어 주십시오.
-   - [마무리]: 내일을 개척할 힘찬 응원과 축원, 연설 일자 및 '기관장 ${principalName} 드림' 형태의 정중한 맺음.
+   - [마무리]: 내일을 개척할 힘찬 응원과 축원, 연설 일자(${formattedDate}) 및 '기관장 ${principalName} 드림' 형태의 정중한 맺음.
 2. 장황하게 같은 말을 늘리지 말고 격조 높은 시적 비유와 은유를 가미해 여운을 길게 주십시오.
 3. 어떠한 정치적 당파성, 이념적 편향, 혹은 종교적 은유도 완벽히 필터링하여 순수한 공교육의 보편적 가치만 살려야 합니다.
 4. 설명이나 해설 문장은 모두 지우고, 단상 위에서 즉각 낭독할 '축사 본문 전문'만을 완벽하게 전송하십시오.
 `;
 
-            // 제공된 API Key를 활용한 구글 Gemini API 직접 연동 설계
-            const apiKey = "AIzaSyCQj8lBsbLIUPFiz8hb4yt3b8E5ReBuVis";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            // 플랫폼 전용 API Key 구성 규칙에 따라 빈 문자열로 초기화 (런타임에서 자동 이식)
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
             const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
@@ -694,9 +697,11 @@ ${combinedAtmospherePrompt}
                 }
             };
 
-            let retries = 3;
+            // 플랫폼 지정 5회 기하급수 백오프 방식 및 무음 처리 이식
+            let retries = 5;
             let delay = 1000;
             let success = false;
+            let lastErrorMessage = "";
             
             while (retries > 0) {
                 try {
@@ -709,15 +714,14 @@ ${combinedAtmospherePrompt}
                     });
 
                     if (!response.ok) {
-                        throw new Error(`HTTP Error Status: ${response.status}`);
+                        const errorJson = await response.json().catch(() => ({}));
+                        const googleErrorMsg = errorJson.error?.message || `HTTP Error ${response.status}`;
+                        throw new Error(googleErrorMsg);
                     }
 
                     const result = await response.json();
                     
-                    let generatedSpeech = "";
-                    if (result && result.candidates?.[0]?.content?.parts?.[0]?.text) {
-                        generatedSpeech = result.candidates[0].content.parts[0].text;
-                    }
+                    const generatedSpeech = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
                     if (generatedSpeech && generatedSpeech.trim()) {
                         const speechTextarea = document.getElementById('speechTextarea');
@@ -734,22 +738,22 @@ ${combinedAtmospherePrompt}
                         showToast("선택된 분위기가 조화롭게 녹아든 맞춤 인사말이 완성되었습니다!", "success");
                         break;
                     } else {
-                        throw new Error("응답 형식 오류 또는 본문 추출 실패");
+                        throw new Error("응답 결과에서 본문 텍스트를 추출할 수 없습니다.");
                     }
 
                 } catch (err) {
-                    console.warn(`API 호출 실패 (재시도 남음: ${retries - 1}):`, err);
+                    lastErrorMessage = err.message;
                     retries--;
                     if (retries === 0) {
                         break;
                     }
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2; // 지수 백오프 적용
+                    delay *= 2; // 1s, 2s, 4s, 8s, 16s 지수 증가
                 }
             }
 
             if (!success) {
-                showToast("네트워크 임시 순연으로 실패했습니다. 하단의 '샘플 초안 불러오기' 기능을 활용해 보십시오.", "error");
+                showToast(`생성 실패: ${lastErrorMessage}`, "error");
             }
 
             if (loader) loader.classList.add('hidden');
@@ -767,6 +771,10 @@ ${combinedAtmospherePrompt}
             const vision = sVisionEl ? sVisionEl.value : "참되고 슬기롭게";
             const eventName = eventNameEl ? eventNameEl.value.trim() : "교육기관 행사";
             
+            // 실시간 현재 날짜 계산 추가
+            const today = new Date();
+            const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+            
             const sampleSpeech = `존경하는 내빈 여러분, 그리고 이 자리를 빛내주신 학부모님과 구성원 여러분 안녕하십니까.
 
 오늘 우리 ${school}은 희망찬 소식과 발전을 다짐하는 뜻깊은 '${eventName}'를 거행하게 되었습니다. 그동안 우리 기관이 정직하게 뿌리내릴 수 있도록 따뜻한 사랑과 변함없는 헌신으로 지지해주신 모든 교육가족 여러분께 머리 숙여 깊은 감사의 말씀을 올립니다.
@@ -781,7 +789,7 @@ ${combinedAtmospherePrompt}
 
 오늘을 경축하며 함께해 주신 모든 분께 다시 한 번 큰 인사를 드립니다. 감사합니다.
 
-2026년 
+${formattedDate} 
 ${school} 기관장 ${principal} 드림`;
 
             const speechTextarea = document.getElementById('speechTextarea');
