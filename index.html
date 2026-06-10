@@ -63,6 +63,30 @@
         <!-- 좌측 설정 영역 (lg: 5칸) -->
         <section class="lg:col-span-5 space-y-6">
 
+            <!-- 0. Gemini API 키 설정 (BYOK) -->
+            <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="text-indigo-600 bg-indigo-50 p-1.5 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                        </span>
+                        <h2 class="text-md sm:text-lg font-bold text-slate-800">Gemini API 키</h2>
+                    </div>
+                    <span id="apiKeyStatus" class="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 border border-rose-200/60">미설정</span>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex gap-2">
+                        <input id="apiKeyInput" type="password" placeholder="(선택) 본인 키를 쓰려면 여기에 붙여넣기" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-800">
+                        <button onclick="saveApiKey()" type="button" class="text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors px-4 py-2.5 rounded-xl whitespace-nowrap">저장</button>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        관리자가 공유 키를 설정해 두면 별도 입력 없이 바로 사용할 수 있습니다.
+                        본인 키를 따로 쓰고 싶을 때만 입력하세요. (<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="text-indigo-600 font-semibold hover:underline">키 발급</a>)
+                    </p>
+                </div>
+            </div>
+
             <!-- 1. 기관 기본 정보 -->
             <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80 hover:shadow-md transition-shadow">
                 <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
@@ -367,6 +391,7 @@
 
         window.onload = function() {
             // 로컬스토리지 복구
+            loadApiKey();
             loadSavedProfile();
             loadSavedHistory();
             
@@ -383,6 +408,57 @@
             
             showToast("시스템이 정상 로드되었습니다. 청중과 분위기를 다양하게 조합해 보세요.", "success");
         };
+
+        // ===== Gemini API 키 관리 (BYOK) =====
+        const API_KEY_STORE = 'gemini_api_key';
+
+        // 저장된 키 불러오기 + 상태 표시 갱신
+        function loadApiKey() {
+            const saved = (localStorage.getItem(API_KEY_STORE) || '').trim();
+            const input = document.getElementById('apiKeyInput');
+            if (saved && input) input.value = saved;
+            updateApiKeyStatus(!!getApiKey());
+        }
+
+        // 키 저장
+        function saveApiKey() {
+            const input = document.getElementById('apiKeyInput');
+            const key = input ? input.value.trim() : '';
+            if (!key) {
+                localStorage.removeItem(API_KEY_STORE);
+                updateApiKeyStatus(!!getApiKey());
+                showToast("개인 키를 지웠습니다. 공유 키가 있으면 그대로 사용됩니다.", "success");
+                return;
+            }
+            localStorage.setItem(API_KEY_STORE, key);
+            updateApiKeyStatus(true);
+            showToast("개인 API 키가 이 브라우저에 저장되어 우선 적용됩니다.", "success");
+        }
+
+        // ▼▼▼ [관리자 전용] 아래 따옴표 안에 공유할 Gemini API 키를 직접 붙여넣으세요 ▼▼▼
+        //     이 키를 넣어두면 교감 선생님들은 별도 입력 없이 바로 사용합니다.
+        //     (개인 키를 입력한 사람은 그 키가 우선 적용됩니다)
+        const SHARED_API_KEY = "AQ.Ab8RN6KBdL3U_gtYjQZ0im9XPioTnHjwkovfwSzgCXRd7klfwQ";
+        // ▲▲▲ 위 따옴표 안의 키만 교체하고 다른 곳은 건드리지 마세요 ▲▲▲
+
+        // 키 가져오기: 개인 키(직접 입력)가 있으면 우선, 없으면 공유 키 사용
+        function getApiKey() {
+            const personal = (localStorage.getItem(API_KEY_STORE) || '').trim();
+            return personal || SHARED_API_KEY.trim();
+        }
+
+        // 상태 배지 갱신
+        function updateApiKeyStatus(isSet) {
+            const badge = document.getElementById('apiKeyStatus');
+            if (!badge) return;
+            if (isSet) {
+                badge.textContent = '설정됨';
+                badge.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/60';
+            } else {
+                badge.textContent = '미설정';
+                badge.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 border border-rose-200/60';
+            }
+        }
 
         // 분위기 복수 선택 체크박스 그리드 빌드
         function renderAtmospheres() {
@@ -686,9 +762,15 @@ ${combinedAtmospherePrompt}
 4. 설명이나 해설 문장은 모두 지우고, 단상 위에서 즉각 낭독할 '축사 본문 전문'만을 완벽하게 전송하십시오.
 `;
 
-            // 플랫폼 전용 API Key 구성 규칙에 따라 빈 문자열로 초기화 (런타임에서 자동 이식)
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            // 사용자가 입력해 둔 본인 Gemini API 키 사용 (BYOK)
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                showToast("먼저 상단에 Gemini API 키를 입력하고 저장해 주세요.", "error");
+                const input = document.getElementById('apiKeyInput');
+                if (input) input.focus();
+                return;
+            }
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
             const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
@@ -716,6 +798,8 @@ ${combinedAtmospherePrompt}
                     if (!response.ok) {
                         const errorJson = await response.json().catch(() => ({}));
                         const googleErrorMsg = errorJson.error?.message || `HTTP Error ${response.status}`;
+                        // 인증·요청 오류(4xx)는 재시도해도 소용없으므로 즉시 중단
+                        if (response.status >= 400 && response.status < 500) retries = 1;
                         throw new Error(googleErrorMsg);
                     }
 
